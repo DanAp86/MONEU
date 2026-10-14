@@ -271,7 +271,7 @@ bool WalletManager::Load(const std::string& passphrase) {
     if (!DecryptEntropy(passphrase, entropy)) {
         std::cerr << "WalletManager: wrong passphrase "
                      "or wallet file tampered with\n";
-        return false;
+        throw WalletError("Wrong password\nACCESS DENIED");
     }
 
     uint8_t seed[64];
@@ -378,7 +378,7 @@ bool WalletManager::Unlock(const std::string& passphrase) {
     std::vector<uint8_t> entropy;
     if (!DecryptEntropy(passphrase, entropy)) {
         std::cerr << "WalletManager: wrong passphrase\n";
-        return false;
+        throw WalletError("Wrong password\nACCESS DENIED");
     }
 
     std::vector<uint8_t> seed(64);
@@ -1003,7 +1003,7 @@ bool WalletManager::LoadNoiseFile(const std::string& passphrase) {
 
     std::vector<uint8_t> raw;
     if (!NoiseStore::DecryptFromFile(noisePath.string(), passphrase, raw)) {
-        return false;
+        throw WalletError("Wrong password\nACCESS DENIED");
     }
 
     if (raw.size() != NetParams::NOISE_FILE_BYTES) {

@@ -46,7 +46,7 @@ Runs the whole suite:
 consensus rules, storage, wallet, networking and money arithmetic. 
 It must end with
 
-    ALL TESTS PASSED
+    ALL TESTS DONE
 
 Anything else means the build is not fit to run and the output names the
 check that failed.

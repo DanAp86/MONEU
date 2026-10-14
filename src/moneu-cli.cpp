@@ -495,6 +495,14 @@ static int HandleMakeNoise(const std::string& passphrase) {
         return 1;
     }
     std::string noisePath = walletDir + "/noise.dat";
+    // Protects the noise file from being overwritten.
+    struct stat existing;
+    if (stat(noisePath.c_str(), &existing) == 0) {
+        std::cerr << "error: a noise file already exists: " << noisePath << "\n"
+                  << "The addresses of this wallet are bound to it. "
+                     "A new noise file belongs to a new wallet only.\n";
+        return 1;
+    }
 
     std::cout << "Do NOT shut down and do NOT interrupt\n"
               << "Your hardware is stressed on purpose to gather "
@@ -533,6 +541,13 @@ static int HandleMakeNoise(const std::string& passphrase) {
     if (!MONEU::NoiseTreeBuilder::ComputeRoot(
             noise.data(), noise.size(), NOISE_LEAF_COUNT, walletDir, kps)) {
         std::cerr << "error: failed to compute KPS\n";
+        return 1;
+    }
+
+    if (stat(noisePath.c_str(), &existing) == 0) {
+        std::cerr << "error: a noise file was created meanwhile: "
+                  << noisePath << "\n"
+                  << "It is kept. This run is discarded.\n";
         return 1;
     }
 

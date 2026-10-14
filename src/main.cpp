@@ -917,7 +917,7 @@ int InteractiveMain() {
         ::WSACleanup();
         return 1;
     }
-    std::cout << "ALL TESTS PASSED\n";
+    std::cout << "ALL TESTS DONE\n";
 
     if (NodeAnswers()) {
         std::cout << "The node is already running.\n";

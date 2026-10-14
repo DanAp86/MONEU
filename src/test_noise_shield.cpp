@@ -1087,7 +1087,7 @@ int main() {
     boost::filesystem::remove_all(dataDir);
 
     if (gFailures == 0) {
-        std::printf("ALL TESTS PASSED\n");
+        std::printf("ALL TESTS DONE\n");
         return 0;
     }
     std::printf("%d TEST(S) FAILED\n", gFailures);
