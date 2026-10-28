@@ -736,8 +736,7 @@ private:
     }
 
     void CancelTimer() {
-        boost::system::error_code ec;
-        mTimer.cancel(ec);
+        mTimer.cancel();
     }
 
     void SendStatusAndClose(int status, const std::string& reason) {
@@ -810,7 +809,7 @@ private:
         if (mClosed) return;
         mClosed = true;
         boost::system::error_code ec;
-        mTimer.cancel(ec);
+        mTimer.cancel();
         mSocket->shutdown(tcp::socket::shutdown_both, ec);
         mSocket->close(ec);
     }

@@ -293,8 +293,7 @@ void ConnManager::StartHandshakeTimeout(
 void ConnManager::CancelHandshakeTimeout(
     NodePtr node)
 {
-    boost::system::error_code ec;
-    node->timeoutTimer->cancel(ec);
+    node->timeoutTimer->cancel();
 }
 
 bool ConnManager::Start(
@@ -376,7 +375,7 @@ void ConnManager::Stop() {
         std::lock_guard<std::mutex> lock(mNodesMutex);
         for (auto& pair : mNodes) {
             boost::system::error_code ec;
-            pair.second->timeoutTimer->cancel(ec);
+            pair.second->timeoutTimer->cancel();
             pair.second->socket.shutdown(
                 tcp::socket::shutdown_both, ec);
             pair.second->socket.close(ec);
@@ -572,7 +571,7 @@ bool ConnManager::ConnectToAddress(const NetAddress& addr) {
     }
 
     bool connected = false;
-    for (auto it = endpoints; it != tcp::resolver::iterator(); ++it) {
+    for (auto it = endpoints.begin(); it != endpoints.end(); ++it) {
         ec = boost::system::error_code();
         node->socket.close(ec);
 
@@ -2240,12 +2239,11 @@ size_t ConnManager::BootstrapFromSeeds() {
     for (const auto& host : NetParams::GetDNSSeeds()) {
         try {
             tcp::resolver resolver(mIO);
-            tcp::resolver::query query(
-                host, std::to_string(NetParams::DEFAULT_PORT));
             boost::system::error_code ec;
-            auto it = resolver.resolve(query, ec);
+            auto results = resolver.resolve(
+                host, std::to_string(NetParams::DEFAULT_PORT), ec);
             if (ec) continue;
-            for (; it != tcp::resolver::iterator(); ++it) {
+            for (auto it = results.begin(); it != results.end(); ++it) {
                 AddKnownAddress(
                     NetAddress(it->endpoint().address().to_string(),
                                NetParams::DEFAULT_PORT));
@@ -2361,7 +2359,7 @@ void ConnManager::DisconnectNode(
     ClearTxInFlightForPeer(node->id);
     node->connected = false;
     boost::system::error_code ec;
-    node->timeoutTimer->cancel(ec);
+    node->timeoutTimer->cancel();
     node->socket.shutdown(
         tcp::socket::shutdown_both, ec);
     node->socket.close(ec);
