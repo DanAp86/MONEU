@@ -56,7 +56,6 @@ find_package(Threads REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(Boost 1.74 REQUIRED COMPONENTS
     filesystem
-    system
     thread
     program_options
 )
