@@ -72,6 +72,103 @@ bool IsRetargetHeight(uint64_t height)
     return (height % NetParams::DIFFICULTY_ADJUSTMENT_INTERVAL) == 0;
 }
 
+// ASERT by Mark Lundeberg. aserti3-2d spec by freetrader, Jonathan Toomim,
+// Calin Culianu and Mark Lundeberg. Integer code from Bitcoin ABC / Bitcoin
+// Cash Node, Copyright (c) 2020 The Bitcoin developers, MIT license.
+static_assert(int64_t(-1) >> 1 == int64_t(-1),
+              "ASERT needs arithmetic right shift of negative numbers");
+
+arith_uint256 CalculateASERT(const arith_uint256& refTarget,
+                             int64_t spacing,
+                             int64_t timeDiff,
+                             int64_t heightDiff,
+                             const arith_uint256& powLimit,
+                             int64_t halfLife)
+{
+    if (refTarget == 0 || refTarget > powLimit || heightDiff < 0 ||
+        halfLife <= 0 || (powLimit >> 224) != 0) {
+        return powLimit;
+    }
+
+    const int64_t kMaxOffset = (int64_t(1) << 47) - 1;
+    int64_t offset = timeDiff - spacing * (heightDiff + 1);
+    if (offset > kMaxOffset) offset = kMaxOffset;
+    if (offset < -kMaxOffset) offset = -kMaxOffset;
+    const int64_t exponent = (offset * 65536) / halfLife;
+
+    int64_t shifts = exponent >> 16;
+    const uint16_t frac = static_cast<uint16_t>(exponent);
+
+    // 2^x approximation, error under 0.013%
+    const uint32_t factor =
+        65536 + ((+195766423245049ull * frac + 971821376ull * frac * frac +
+                  5127ull * frac * frac * frac + (1ull << 47)) >> 48);
+
+    arith_uint256 nextTarget = refTarget * factor;
+
+    shifts -= 16;
+    if (shifts <= 0) {
+        if (-shifts >= 256) {
+            nextTarget = 0;
+        } else {
+            nextTarget >>= static_cast<unsigned int>(-shifts);
+        }
+    } else {
+        if (shifts >= 256) {
+            nextTarget = powLimit;
+        } else {
+            const arith_uint256 shifted =
+                nextTarget << static_cast<unsigned int>(shifts);
+            if ((shifted >> static_cast<unsigned int>(shifts)) != nextTarget) {
+                nextTarget = powLimit;
+            } else {
+                nextTarget = shifted;
+            }
+        }
+    }
+
+    if (nextTarget == 0) {
+        nextTarget = arith_uint256(1);
+    } else if (nextTarget > powLimit) {
+        nextTarget = powLimit;
+    }
+    return nextTarget;
+}
+
+bool IsAsertHeight(uint64_t height)
+{
+    return height > NetParams::ASERT_ANCHOR_HEIGHT;
+}
+
+uint32_t CalculateASERTBits(uint32_t anchorBits,
+                            uint64_t anchorParentTime,
+                            uint64_t parentTime,
+                            uint64_t parentHeight)
+{
+    arith_uint256 powLimit;
+    powLimit.SetCompact(NetParams::POW_LIMIT_COMPACT);
+
+    bool negative = false;
+    bool overflow = false;
+    arith_uint256 refTarget;
+    refTarget.SetCompact(anchorBits, &negative, &overflow);
+    if (negative || overflow || refTarget == 0 || refTarget > powLimit) {
+        return NetParams::POW_LIMIT_COMPACT;
+    }
+
+    const int64_t timeDiff =
+        static_cast<int64_t>(parentTime) -
+        static_cast<int64_t>(anchorParentTime);
+    const int64_t heightDiff =
+        static_cast<int64_t>(parentHeight) -
+        static_cast<int64_t>(NetParams::ASERT_ANCHOR_HEIGHT);
+
+    const arith_uint256 next = CalculateASERT(
+        refTarget, static_cast<int64_t>(NetParams::BLOCK_TIME_TARGET),
+        timeDiff, heightDiff, powLimit, NetParams::ASERT_HALF_LIFE);
+    return next.GetCompact();
+}
+
 bytes32 GetBlockProof(uint32_t bits)
 {
     bool fNegative = false;

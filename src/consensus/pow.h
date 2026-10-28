@@ -8,6 +8,7 @@
 #define MONEU_CONSENSUS_POW_H
 
 #include "../chainparams.h"
+#include "../crypto/arith_uint256.h"
 #include <cstdint>
 
 namespace PNC {
@@ -19,6 +20,20 @@ uint32_t CalculateNextWorkRequired(uint32_t lastBits,
                                    uint64_t firstBlockTime);
 
 bool IsRetargetHeight(uint64_t height);
+
+arith_uint256 CalculateASERT(const arith_uint256& refTarget,
+                             int64_t spacing,
+                             int64_t timeDiff,
+                             int64_t heightDiff,
+                             const arith_uint256& powLimit,
+                             int64_t halfLife);
+
+bool IsAsertHeight(uint64_t height);
+
+uint32_t CalculateASERTBits(uint32_t anchorBits,
+                            uint64_t anchorParentTime,
+                            uint64_t parentTime,
+                            uint64_t parentHeight);
 
 bytes32 CompactToTarget(uint32_t bits);
 

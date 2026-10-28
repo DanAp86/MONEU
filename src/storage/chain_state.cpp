@@ -737,6 +737,30 @@ uint32_t ChainState::GetExpectedBitsLocked(uint32_t height) const
         return NetParams::POW_LIMIT_COMPACT;
     }
 
+    // ASERT above the anchor block
+    if (PNC::IsAsertHeight(height)) {
+        const uint32_t anchorHeight = NetParams::ASERT_ANCHOR_HEIGHT;
+        if (mBestChain.height + 1 != height ||
+            mBestChain.height < anchorHeight) {
+            std::cerr << "ChainState: ASERT asked for height " << height
+                      << " with tip " << mBestChain.height << "\n";
+            return mBestChain.bits;
+        }
+        bytes32 anchorHash, anchorParentHash;
+        BlockIndexEntry anchor, anchorParent;
+        if (!GetBlockHashByHeightLocked(anchorHeight, anchorHash) ||
+            !GetBlockHashByHeightLocked(anchorHeight - 1, anchorParentHash) ||
+            !mBlockData->ReadBlockIndex(anchorHash, anchor) ||
+            !mBlockData->ReadBlockIndex(anchorParentHash, anchorParent)) {
+            std::cerr << "ChainState: ASERT cannot read the anchor block at "
+                      << anchorHeight << "; keeping the current target\n";
+            return mBestChain.bits;
+        }
+        return PNC::CalculateASERTBits(anchor.nBits, anchorParent.nTime,
+                                       mBestChain.timestamp,
+                                       mBestChain.height);
+    }
+
     if (!PNC::IsRetargetHeight(height)) {
         return mBestChain.bits;
     }

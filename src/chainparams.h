@@ -53,6 +53,9 @@ extern const uint64_t  POW_TARGET_TIMESPAN;
 extern const uint32_t  POW_MIN_TIMESPAN_PERCENT;
 extern const uint32_t  POW_MAX_TIMESPAN_PERCENT;
 
+extern const uint32_t  ASERT_ANCHOR_HEIGHT;
+extern const int64_t   ASERT_HALF_LIFE;
+
 extern const uint32_t  COINBASE_MATURITY;
 extern const uint32_t  MAX_BLOCK_SIZE;
 extern const uint32_t  MAX_OP_RETURN_SIZE;

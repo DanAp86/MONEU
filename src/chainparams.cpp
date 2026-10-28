@@ -15,7 +15,7 @@ namespace NetParams {
 
 const uint8_t MAINNET_MAGIC[4] = {0xB6, 0xFD, 0xFA, 0x84};
 const char* NETWORK_ID = "moneu";
-const char* USER_AGENT = "/MONEU:0.2.3/";
+const char* USER_AGENT = "/MONEU:0.2.4/";
 
 const uint16_t DEFAULT_PORT = 8327;
 const uint16_t RPC_PORT = 8328;
@@ -49,6 +49,10 @@ const uint32_t DIFFICULTY_ADJUSTMENT_INTERVAL = 2016;
 const uint64_t POW_TARGET_TIMESPAN         = 2016ULL * 600ULL;
 const uint32_t POW_MIN_TIMESPAN_PERCENT    = 80;
 const uint32_t POW_MAX_TIMESPAN_PERCENT    = 400;
+
+// ASERT from block 65714, half-life as in Bitcoin Cash.
+const uint32_t ASERT_ANCHOR_HEIGHT         = 65713;
+const int64_t  ASERT_HALF_LIFE             = 2 * 24 * 60 * 60;
 
 const uint32_t COINBASE_MATURITY = 50;
 const uint32_t MAX_BLOCK_SIZE = 6 * 1024 * 1024;
